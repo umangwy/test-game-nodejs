@@ -1,0 +1,71 @@
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="/styles/defaultstyle.css">
+
+<div class="default-page">
+
+  <div class="main container clearfix">
+    <div id="gameUpdates" style="position: absolute;right: 20px;">
+      <h2> Live Game Updates!!</h2><br>
+    </div>
+    <h1>Play Game</h1><br>
+    <div id="loggedInUser"></div>
+    <form class="pure-form" id="submitMessageForm">
+      <label> Message: </label><input type="text" id="message">
+      <input type="submit" class="pure-button pure-button-primary"/>
+    </form>
+    <div id="chat" style="width:100px;overflow:hidden;position: absolute;"></div>
+  </div>
+</div>
+<script>
+
+  //this should always be present on game page
+  var gameroomId = '<%= req.session.gameroomId %>';
+  var loggedInUserId = '<%= req.session.user %>';
+
+  io.socket.get("/subscribeToGame/" + gameroomId, function (response) {
+    console.log("subscribed response: ");
+  });
+
+  //for specific game event like player played a turn then gets values
+  io.socket.on('gameUpdate' + gameroomId, function (result) {
+    console.log("Received gameroom event update!" + result);
+
+    $("#chat").append("<p>" + result.message + "</p>");
+  });
+
+  //only for real time updates like who played, joined, left
+  io.socket.on('gameRoomUpdate' + gameroomId, function (result) {
+    console.log("Received gameroom updates!" + result);
+
+    $("#gameUpdates").append("<li class = 'clearfix'>" + result.message + "</li>");
+  });
+
+  //only for when gameroom is delete
+  io.socket.on('gameRoomDelete' + gameroomId, function (result) {
+    console.log("Received gameroom delete event!" + result);
+
+    alert("This gameroom has been deleted by the admin");
+    window.location.href = "/";
+  });
+
+  $("#submitMessageForm").submit(function () {
+    var message = $("#message").val();
+
+    function messagePostCallBack() {
+      console.log("message post successful");
+    }
+
+    if (message && message.length != 0) {
+      $.post('/playGame/' + gameroomId,
+        {message: message},
+        messagePostCallBack
+      ).fail(function (res) {
+        console.log("Error: " + res.responseJSON.error);
+      });
+    } else {
+      console.log("A message is required");
+    }
+
+    return false;
+  });
+</script>
