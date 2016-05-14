@@ -82,7 +82,7 @@ module.exports = {
   getGameRoomSummary: function (req, res) {
     Gameroom.find().populate('admin').exec(function (err, result) {
       if (err)
-        res.json(500, {error: "DB connection error"});
+        return res.json(500, {error: "DB connection error"});
 
       GameRoomService.subscribeUsersToGameSummaryUpdates(req, res);
       return res.json(result);

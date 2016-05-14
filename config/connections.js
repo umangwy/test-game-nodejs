@@ -46,6 +46,13 @@ module.exports.connections = {
     user: 'root', //optional
     password: '', //optional
     database: 'gameDB' //optional
+  },
+  testmysqlServer: {
+    adapter: 'sails-mysql',
+    host: 'localhost',
+    user: 'root', //optional
+    password: '', //optional
+    database: 'testDB' //optional
   }
 
   /***************************************************************************

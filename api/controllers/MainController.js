@@ -24,6 +24,7 @@ module.exports = {
     }
   },
   signup: function (req, res) {
+    var hasher = require("password-hash");
     var userName = req.param("userName");
     var password = req.param("password");
 
@@ -36,10 +37,11 @@ module.exports = {
         return res.json(500, {error: "DB Error"});
       }
       else if (user.length) {
-        return res.json(400, {error : "username already registered"});
+        return res.json(400, {error: "username already registered"});
       }
       else {
-        Users.create({userName: userName, password: password}).exec(function (err, user) {
+        hashedPassword = hasher.generate(password);
+        Users.create({userName: userName, password: hashedPassword}).exec(function (err, user) {
           if (err) {
             return res.json(500, {error: "Error while signing up"});
           }
@@ -53,16 +55,16 @@ module.exports = {
     });
   },
   login: function (req, res) {
-    console.log("test");
     var userName = req.param("userName");
     var password = req.param("password");
+    var hasher = require("password-hash");
 
     Users.findByUserName(userName).exec(function (err, user) {
       if (err) {
         return res.json(500, {error: "DB Error"});
       } else {
         if (user.length) {
-          if (password == user[0].password) {
+          if (hasher.verify(password, user[0].password)) {
             req.session.user = user[0].userId;
             req.session.userName = user[0].userName;
             return res.json(200);
@@ -70,14 +72,14 @@ module.exports = {
             return res.json(400, {error: "Wrong Password"});
           }
         } else {
-          res.json(404, {error: "User not Found"});
+          return res.json(404, {error: "User not Found"});
         }
       }
     });
   },
   logout: function (req, res) {
-    req.session.destroy(function(err) {
-        return res.redirect('/');
+    req.session.destroy(function (err) {
+      return res.redirect('/');
     });
   }
 };
