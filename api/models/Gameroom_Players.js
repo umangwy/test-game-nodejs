@@ -11,10 +11,14 @@ module.exports = {
       model: 'gameroom'
     },
     gameroomName: {
-      type : 'string'
+      type: 'string'
     },
     userId: {
-      model : 'users'
+      model: 'users'
+    },
+    gameScore: {
+      type: 'integer',
+      defaultsTo: 0
     }
   }
 };

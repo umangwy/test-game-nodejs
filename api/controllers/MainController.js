@@ -7,7 +7,6 @@
 
 module.exports = {
   index: function (req, res) {
-    console.log(req.session.user);
     // var userName = UserService.getLoggedInUser(req.session.user);
 
     if (req.session.user !== undefined) {
@@ -29,21 +28,20 @@ module.exports = {
     var password = req.param("password");
 
     if (!userName && !password) {
-      res.send(400, {error: "error in username and password"});
+      return res.json(400, {error: "error in username and password"});
     }
 
     Users.findByUserName(userName).exec(function (err, user) {
       if (err) {
-        res.send(500, {error: "DB Error"});
+        return res.json(500, {error: "DB Error"});
       }
       else if (user.length) {
-        res.set('error', 'username already registered');
-        res.send(400);
+        return res.json(400, {error : "username already registered"});
       }
       else {
         Users.create({userName: userName, password: password}).exec(function (err, user) {
           if (err) {
-            res.send(500, {error: "Error while signing up"});
+            return res.json(500, {error: "Error while signing up"});
           }
           else {
             req.session.user = user.userId;
@@ -60,7 +58,7 @@ module.exports = {
 
     Users.findByUserName(userName).exec(function (err, user) {
       if (err) {
-        res.send(500, {error: "DB Error"});
+        return res.json(500, {error: "DB Error"});
       } else {
         if (user.length) {
           if (password == user[0].password) {
@@ -68,12 +66,10 @@ module.exports = {
             req.session.userName = user[0].userName;
             return res.json(200);
           } else {
-            res.set('error', 'wrong password');
-            res.send(400, {error: "Wrong Password"});
+            return res.json(400, {error: "Wrong Password"});
           }
         } else {
-          res.set('error', 'user not found');
-          res.send(404, {error: "User not Found"});
+          res.json(404, {error: "User not Found"});
         }
       }
     });

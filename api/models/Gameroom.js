@@ -22,12 +22,18 @@ module.exports = {
     },
     activeStatus: {
       type: 'integer',
-      columnName : 'activeStatus',
+      defaultsTo: 0
+    },
+    admin: {
+      model: 'users'
+    },
+    currentLevel: {
+      type: 'integer',
       defaultsTo: 1
     },
-    admin:{
-      model:'users',
-      unique: true
+    activePlayers: {
+      type: 'integer',
+      defaultsTo: 1
     }
   }
 };

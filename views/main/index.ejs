@@ -1,4 +1,4 @@
-<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600' rel='stylesheet' type='text/css'>
+<!--<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600' rel='stylesheet' type='text/css'>-->
 
 <div class="default-page">
   <div class="main container clearfix">
@@ -18,7 +18,6 @@
       <div>
         <h3>Signup</h3>
         <form class="pure-form" id="signupForm">
-
           <input type="text" id="signupUserName" placeholder="user name"/>
           <input type="password" id="signupPassword" placeholder="password"/>
           <input type="submit" class="pure-button pure-button-primary"/>
@@ -77,6 +76,10 @@
   io.socket.on('gameSummaryUpdatesEvent', function (data) {
     console.log("Received gameroom updates!" + data);
     io.socket.get("/getGameRoomSummary", listGameRoomSummary);
+
+    if (loggedInUserId !== undefined) {
+      getUsersCurrentGameroom(loggedInUserId);
+    }
   });
 
   function getUsersCurrentGameroom(userId) {
@@ -96,7 +99,7 @@
         {userName: userName, password: password},
         loginCallBack
       ).fail(function (res) {
-        console.log("Error: " + res.getResponseHeader("error"));
+        alert(res.responseJSON.error);
       });
     } else {
       console.log("A username and password is required");
@@ -115,7 +118,7 @@
         {userName: userName, password: password},
         signupCallBack
       ).fail(function (res) {
-        console.log("Error: " + res.getResponseHeader("error"));
+        alert(res.responseJSON.error);
       });
     } else {
       console.log("A username and password is required");
@@ -144,7 +147,6 @@
 
     function gameRoomCreateCallBack() {
       console.log("gameroom created");
-      getUsersCurrentGameroom(loggedInUserId);
     }
 
     if (gameroomName) {
@@ -152,7 +154,8 @@
         {gameroomName: gameroomName},
         gameRoomCreateCallBack
       ).fail(function (res) {
-        console.log("Error: " + res.getResponseHeader("error"));
+        alert(res.responseJSON.error);
+        console.log("Error: " + res.responseJSON.error);
       });
     } else {
       console.log("A gameroom name is required");
@@ -171,39 +174,24 @@
       window.location.href = "/gameLandingPage/" + data.gameroomId;
     }
 
-    if (!loggedInUserName) {
-      console.log("You should be logged in to join a game");
+    if (typeof loggedInUserName == 'undefined') {
+      alert("You should be logged in to join a game");
       return;
     }
 
     if (id) {
-      gameroomId = id.substr(id.length - 1); //gameroomid are of format gameroom1
+      var gameroomId = id;
       $.post('/joinGameRoom',
         {gameroomId: gameroomId},
         gameroomJoinCallBack
       ).fail(function (res) {
         console.log("Error: " + res.responseJSON.error);
+        alert(res.responseJSON.error);
       });
     } else {
       console.log("A gameroom id is required");
     }
   });
-
-  listGameRoomSummary = function (response) {
-    var activeGameRoomDiv = $("#activeGameRooms")
-    activeGameRoomDiv.empty();
-    activeGameRoomDiv.append("<h2> Active Gamerooms</h2><br>")
-    var table = $("<table class='pure-table'>")
-    table.append("<thead><tr><th>Gameroom name</th><th>No. of Players</th><th>#</th></tr></thead>")
-    $.each(response, function (index, data) {
-      var tr = $("<tr>");
-      tr.append("<td>" + data.gameroomName + "</td><td>" + data.playersCount + " </td>");
-      tr.append("<td><button class='pure-button pure-button-primary gameRoomJoinButton' id = 'gameroom" + data.gameroomId + "'>Join</button></td></tr>");
-      table.append(tr);
-    });
-    table.append("</table>")
-    activeGameRoomDiv.append(table);
-  }
 
   $("body").on("click", ".gameRoomLeaveButton", function (response) {
     console.log("gameroomLeaveEvent");
@@ -212,7 +200,6 @@
     io.socket.post('/leaveCurrentGame/',
       {gameRoomId: gameRoomid}, function (response) {
         console.log("left gameroom");
-        getUsersCurrentGameroom(loggedInUserId);
       }
     );
   });
@@ -238,6 +225,28 @@
     });
     table.append("</table>")
     currentGameRoomDiv.append(table);
+  }
+
+  function listGameRoomSummary(response) {
+    var activeGameRoomDiv = $("#activeGameRooms")
+    activeGameRoomDiv.empty();
+    activeGameRoomDiv.append("<h2> Active Gamerooms</h2><br>")
+    var table = $("<table class='pure-table'>")
+    table.append("<thead><tr><th>Gameroom name</th><th>Admin</th><th>No. of Players</th><th>#</th></tr></thead>")
+    $.each(response, function (index, data) {
+      var tr = $("<tr>");
+      tr.append("<td>" + data.gameroomName + "</td><td>" + data.admin.userName + "</td><td>" + data.activePlayers + " </td>");
+      if (typeof loggedInUserName != 'undefined' && data.admin.userId != loggedInUserId) {
+        tr.append("<td><button class='pure-button pure-button-primary gameRoomJoinButton' id = '" + data.gameroomId + "'>Join</button></td>");
+      }
+      else {
+        tr.append("<td><button class='pure-button pure-button-disabled'>Join</button></td>");
+      }
+      table.append("</tr>")
+      table.append(tr);
+    });
+    table.append("</table>")
+    activeGameRoomDiv.append(table);
   }
 
 

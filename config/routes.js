@@ -56,7 +56,7 @@ module.exports.routes = {
     controller: 'Gameroom',
     action: 'getActiveGameRooms'
   },
-  '/getGameRoomDetails': {
+  '/getGameRoomDetails/:gameroomId': {
     controller: 'gameroom',
     action: 'getGameRoomDetails'
   },
@@ -64,7 +64,7 @@ module.exports.routes = {
     controller: 'gameroom',
     action: 'joinGameRoom'
   },
-  '/delistGameRoom': {
+  '/delistGameRoom/:gameRoomId': {
     controller: 'gameroom',
     action: 'delistGameRoom'
   },
@@ -76,9 +76,9 @@ module.exports.routes = {
     controller: 'gameroom',
     action: 'gameLandingPage'
   },
-  '/playGame/:gameRoomId': {
+  '/gameChat/:gameRoomId': {
     controller: 'gameroom',
-    action: 'playGame'
+    action: 'gameChat'
   },
   '/subscribeToGame/:gameRoomId': {
     controller: 'gameroom',
@@ -91,8 +91,23 @@ module.exports.routes = {
   '/leaveCurrentGame/': {
     controller: 'gameroom',
     action: 'leaveCurrentGame'
+  },
+  '/startGame/:gameRoomId': {
+    controller: 'gameroom',
+    action: 'startGame'
+  },
+  '/getGameScores/:gameRoomId': {
+    controller: 'gameroom',
+    action: 'getGameScores'
+  },
+  '/updateScore/': {
+    controller: 'gameroom',
+    action: 'updateScore'
+  },
+  '/getNextQuestion/': {
+    controller: 'gameroom',
+    action: 'getNextQuestion'
   }
-
   /***************************************************************************
    *                                                                          *
    * Custom routes here...                                                    *

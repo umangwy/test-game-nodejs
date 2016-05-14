@@ -26,10 +26,32 @@ module.exports = {
     }
   },
 
-  //game room events like who joined, whose turn is this etc
+  //game room events like who joined, whose turn is it etc
 
   publishGameRoomUpdates: function (req, gameroomId, data) {
     sails.sockets.broadcast("gameRoom" + gameroomId, "gameRoomUpdate" + gameroomId, data);
+  },
+
+  //game start update
+
+  publishGameStartUpdate: function (req, gameroomId, data) {
+    sails.sockets.broadcast("gameRoom" + gameroomId, "gameStart" + gameroomId, data);
+  },
+
+  //game score update
+
+  publishGameScores: function (req, gameroomId, data) {
+    sails.sockets.broadcast("gameRoom" + gameroomId, "gameScore" + gameroomId, data);
+  },
+
+  //next question update
+  publishNextQuestion: function (req, gameroomId, data) {
+    sails.sockets.broadcast("gameRoom" + gameroomId, "nextQuestion" + gameroomId, data);
+  },
+
+  //publish game end update to client
+  publishGameEndUpdate: function (req, gameroomId, data) {
+    sails.sockets.broadcast("gameRoom" + gameroomId, "gameEnd" + gameroomId, data);
   },
 
   //unsubscribe specific user from gameroom update when he is leaving the room or disconnected
@@ -58,8 +80,8 @@ module.exports = {
 
   //actual game update like result after player 1 turn etc
 
-  publishGameUpdate: function (req, gameroomId, data) {
-    sails.sockets.broadcast("gameRoom" + gameroomId, "gameUpdate" + gameroomId, data);
+  //game chat
+  publishGameChat: function (req, gameroomId, data) {
+    sails.sockets.broadcast("gameRoom" + gameroomId, "gameChat" + gameroomId, data);
   }
-
 };

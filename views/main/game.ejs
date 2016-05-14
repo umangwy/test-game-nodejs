@@ -1,43 +1,121 @@
-<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600' rel='stylesheet' type='text/css'>
+<!--<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600' rel='stylesheet' type='text/css'-->
+<!--xmlns="http://www.w3.org/1999/html">-->
 <link rel="stylesheet" href="/styles/defaultstyle.css">
 
 <div class="default-page">
 
-  <div class="main container clearfix">
-    <div id="gameUpdates" style="position: absolute;right: 20px;">
-      <h2> Live Game Updates!!</h2><br>
+  <div>
+    <div id="topDiv">
+      <a class="pure-button pure-button-primary" href="/">Home</a>
+      <button class='pure-button pure-button-primary gameRoomLeaveButton'
+              id="<%= gameroomId %>">Leave Game
+      </button>
+      <h2 align="center" id="gameroomNameHeader"></h2>
     </div>
-    <h1>Play Game</h1><br>
-    <div id="loggedInUser"></div>
-    <form class="pure-form" id="submitMessageForm">
-      <label> Message: </label><input type="text" id="message">
-      <input type="submit" class="pure-button pure-button-primary"/>
-    </form>
-    <div id="chat" style="width:100px;overflow:hidden;position: absolute;"></div>
+    <div>
+      <table class="pure-table" style="border:none !important;">
+        <tr>
+          <td width="26%">
+            <div id="loggedInUser"></div>
+            <form class="pure-form" id="submitMessageForm" style=" margin: 20px;">
+              <h2 style="text-align: center;">Chat with other users</h2><br>
+              <input type="text" id="message"/>
+              <input type="submit" class="pure-button pure-button-primary"/>
+            </form>
+            <div id="chat"></div>
+
+          </td>
+          <td width="54%">
+            <div id="gameDetails">
+              <div id="gameScores"></div>
+              <br>
+              <button class="pure-button pure-button-primary" id="startGameButton" style="width: 20%;">Start Game
+              </button>
+              <h3 style="text-align: center;">Solve the anagram</h3> <br>
+              <h3 style="text-align: center;" id="latestUpdate"></h3> <br>
+              <div id="gameQuestion">
+                <form class="pure-form" id="gamePlayForm"></form>
+              </div>
+            </div>
+          </td>
+          <td width="20%">
+            <div id="gameUpdates">
+              <h2 style="text-align: center;"> Live Game Updates</h2><br>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </div>
-<script>
 
+<script>
   //this should always be present on game page
-  var gameroomId = '<%= req.session.gameroomId %>';
+  var gameroomId = '<%= gameroomId %>';
   var loggedInUserId = '<%= req.session.user %>';
+  var loggedInUserName = '<%= req.session.userName %>';
+
+  console.log("loggedinuser:" + loggedInUserName);
+  $('<p> Hello, <b>' + loggedInUserName + '</b></p> <p> You are logged in </p>').appendTo('#loggedInUser');
 
   io.socket.get("/subscribeToGame/" + gameroomId, function (response) {
     console.log("subscribed response: ");
   });
 
+  //check if game has already started
+  io.socket.get("/getGameRoomDetails/" + gameroomId, function (response) {
+    console.log("getGameRoomDetails response" + response);
+    $("#gameroomNameHeader").append("Gameroom : " + response.gameroomName);
+    if (response.activeStatus == 1) {
+      $("#startGameButton").hide();
+      getCurrentQuestion();
+    }
+  });
+
   //for specific game event like player played a turn then gets values
-  io.socket.on('gameUpdate' + gameroomId, function (result) {
+  io.socket.on('gameChat' + gameroomId, function (result) {
     console.log("Received gameroom event update!" + result);
 
-    $("#chat").append("<p>" + result.message + "</p>");
+    $("#chat").append("<p>" + result.userName + ": " + result.message + "</p>");
   });
+
+  //for next level updates
+  io.socket.on('nextQuestion' + gameroomId, function (result) {
+    console.log("Received next question update!" + result);
+    showCurrentQuestion(result.currentLevel, result.question);
+  });
+
+  //for game start update
+  io.socket.on('gameStart' + gameroomId, function (result) {
+    console.log("Received game start update!" + result);
+    $("#startGameButton").hide();
+    getCurrentQuestion();
+  });
+
+  io.socket.on('gameScore' + gameroomId, function (result) {
+    console.log("Received gameroom score update event!");
+    io.socket.get("/getGameScores/" + gameroomId, function (response) {
+      console.log("Game scores:" + response);
+      displayGameScores(response);
+    });
+  });
+
+  function getCurrentQuestion() {
+    $.get('/getNextQuestion/', {gameroomId: gameroomId}, function (result) {
+        showCurrentQuestion(result.currentLevel, result.question);
+      }
+    ).fail(function (res) {
+      console.log("Error: " + res.responseJSON.error);
+    });
+
+  }
 
   //only for real time updates like who played, joined, left
   io.socket.on('gameRoomUpdate' + gameroomId, function (result) {
     console.log("Received gameroom updates!" + result);
 
     $("#gameUpdates").append("<li class = 'clearfix'>" + result.message + "</li>");
+    $("#latestUpdate").text("Latest update : " + result.message);
   });
 
   //only for when gameroom is delete
@@ -48,15 +126,36 @@
     window.location.href = "/";
   });
 
+  //only for when game has ended
+  io.socket.on('gameEnd' + gameroomId, function (result) {
+    console.log("Received gameroom end event!");
+
+    var finalScore = "Game Ended! Final Scores are\n";
+    $.each(result, function (index, data) {
+      finalScore = finalScore + data.userId.userName + " : " + data.gameScore + "\n";
+    })
+
+    finalScore += "\nThis gameroom will be delisted now";
+
+    alert(finalScore);
+    window.location.href = "/";
+  });
+
+  $("body").on("click", "#startGameButton", function () {
+    console.log("start button clicked");
+    startGame();
+  })
+
   $("#submitMessageForm").submit(function () {
     var message = $("#message").val();
 
     function messagePostCallBack() {
       console.log("message post successful");
+      $("#message").val('');
     }
 
     if (message && message.length != 0) {
-      $.post('/playGame/' + gameroomId,
+      $.post('/gameChat/' + gameroomId,
         {message: message},
         messagePostCallBack
       ).fail(function (res) {
@@ -65,7 +164,81 @@
     } else {
       console.log("A message is required");
     }
-
     return false;
   });
+
+  function startGame() {
+    $.post('/startGame/' + gameroomId, {}, function (response) {
+      $("#startGameButton").hide();
+      getCurrentQuestion();
+    }).fail(function (res) {
+      console.log("Error while starting the game: " + res.responseJSON.error);
+      alert(res.responseJSON.error);
+    });
+  }
+
+  $("body").on("click", ".gameRoomLeaveButton", function () {
+    console.log("gameroomLeaveEvent");
+    var gameRoomid = $(this).attr('id');
+
+    io.socket.post('/leaveCurrentGame/',
+      {gameRoomId: gameRoomid}, function (response) {
+        console.log("left gameroom");
+        window.location.href = "/";
+      }
+    );
+  });
+
+  $("body").on("click", ".answerSubmit", function () {
+    console.log("answer submit event");
+    var currentLevel = parseInt($(this).attr('id'));
+    var answer = $('.answer').val();
+
+    $.post('/updateScore/', {currentLevel: currentLevel, answer: answer, gameroomId : gameroomId}, function (response) {
+      console.log("Score updated");
+    }).fail(function (res) {
+      console.log("error while updating score");
+      alert(res.responseJSON.error);
+    });
+
+    return false;
+
+  });
+
+  function displayGameScores(response) {
+    var gameScoresDiv = $("#gameScores");
+
+    gameScoresDiv.empty();
+    var table = $("<table class='pure-table' style='margin: 0 auto;'>")
+    var playerImgRow = $("<tr>");
+    var playerNameRow = $("<tr>");
+    var playerScoresRow = $("<tr>");
+
+    $.each(response, function (index, data) {
+      playerImgRow.append('<td><img src="/images/player.jpg" alt="Player" style="width:80px;height:80px;"></td>');
+      playerNameRow.append('<td style="text-align: center">' + data.userId.userName + '</td>');
+      playerScoresRow.append('<td style="text-align: center">' + data.gameScore + '</td>');
+    });
+
+    playerImgRow.append("</tr>");
+    playerNameRow.append("</tr>");
+    playerScoresRow.append("</tr>");
+
+    table.append(playerImgRow);
+    table.append(playerNameRow);
+    table.append(playerScoresRow);
+    table.append("</table>");
+    gameScoresDiv.append(table);
+  }
+
+  function showCurrentQuestion(currentLevel, currentQuestion) {
+    currentLevel = parseInt(currentLevel);
+    var gamePlayForm = $("#gamePlayForm");
+    gamePlayForm.empty();
+    gamePlayForm.append("<h1>Level " + currentLevel + "</h1><br>");
+    gamePlayForm.append("<h2>Anagram : " + currentQuestion + "</h2><br>");
+    gamePlayForm.append("<input type='text' class = 'answer' placeholder='Enter Your Answer'/>");
+    gamePlayForm.append("<input type='submit' class = 'answerSubmit pure-button pure-button-primary' id='" + currentLevel + "'/>");
+  }
+
 </script>
