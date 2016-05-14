@@ -112,7 +112,7 @@ module.exports = {
             return res.json(400, {error: "You cannot join the game once it has started"});
           }
 
-          var gameroomName = result[0].gameroomName;
+          var gameroomName = result.gameroomName;
           Gameroom_Players.find({gameroomId: gameroomId}).exec(function (err, result) {
             if (result.length < sails.config.gameconfig.maxGamePlayers) {
               Gameroom.query("UPDATE gameroom set activePlayers=activePlayers+1 where gameroomId=" + gameroomId, function () {

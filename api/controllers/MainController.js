@@ -53,6 +53,7 @@ module.exports = {
     });
   },
   login: function (req, res) {
+    console.log("test");
     var userName = req.param("userName");
     var password = req.param("password");
 
