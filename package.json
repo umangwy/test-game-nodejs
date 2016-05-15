@@ -27,14 +27,14 @@
   "scripts": {
     "debug": "node debug app.js",
     "start": "node app.js",
-    "test": "node ./node_modules/mocha/bin/mocha test/bootstrap.test.js test/integration/**/*.test.js"
+    "test": "mocha test/bootstrap.test.js test/integration/**/*.test.js"
   },
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/webyog/real-time-game.git"
+    "url": "https://github.com/umangkedia/test-game-nodejs.git"
   },
-  "author": "webyog",
+  "author": "umang.kedia",
   "license": "",
   "devDependencies": {
     "mocha": "^2.4.5",

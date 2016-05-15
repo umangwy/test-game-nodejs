@@ -64,10 +64,6 @@ module.exports.routes = {
     controller: 'gameroom',
     action: 'joinGameRoom'
   },
-  '/delistGameRoom/:gameRoomId': {
-    controller: 'gameroom',
-    action: 'delistGameRoom'
-  },
   '/getGameRoomSummary': {
     controller: 'gameroom',
     action: 'getGameRoomSummary'

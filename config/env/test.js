@@ -19,7 +19,7 @@ module.exports = {
 
   models: {
     connection: 'testmysqlServer',
-    migrate: 'drop'
+    migrate: 'drop' //drop table everytime server starts
   }
 
   /***************************************************************************

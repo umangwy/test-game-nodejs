@@ -13,13 +13,15 @@ module.exports = {
     if (!gameroomName) {
       return res.json(400, "Gameroom name cannot be empty");
     }
-    // req.session.user = 1; //testing
 
     if (req.session.user !== undefined) {
       var loggedInUser = req.session.user;
-      Gameroom.findOne({admin: loggedInUser}).exec(function (err, result) {
+      Gameroom.findOne({gameroomName: gameroomName}).exec(function (err, result) {
         if (err)
           return res.json(500, {error: "DB connection error"});
+        
+        if (result) 
+          return res.json(400, {error: "Gameroom with same name exist"});
 
 
         Gameroom.create({
